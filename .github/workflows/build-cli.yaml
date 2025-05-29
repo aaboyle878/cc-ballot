@@ -1,0 +1,52 @@
+name: Build and Release cc-ballot-cli
+
+on:
+  push:
+    tags:
+      - 'cc-ballot-cli-v*'
+    branches:
+      - cc-elections-2025
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: cli/cc-ballot-cli
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build fat JAR
+        run: ./gradlew fatJar
+
+      - name: Prepare distribution folder
+        run: |
+          mkdir -p dist/cc-ballot-cli
+          cp build/libs/cc-ballot-cli-all.jar dist/cc-ballot-cli/
+          cp cc-ballot-cli.sh cc-ballot-cli.bat install.sh README.md dist/cc-ballot-cli/
+          chmod +x dist/cc-ballot-cli/*.sh
+
+      - name: Zip distribution
+        run: |
+          cd dist
+          zip -r cc-ballot-cli.zip cc-ballot-cli
+
+      - name: Upload Release Artifact
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: dist/cc-ballot-cli.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
