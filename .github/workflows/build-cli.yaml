@@ -34,7 +34,15 @@ jobs:
       - name: Prepare distribution folder
         run: |
           mkdir -p dist/cc-ballot-cli
-          cp build/libs/cc-ballot-cli-all.jar dist/cc-ballot-cli/
+          JAR_FILE=$(find build/libs -name '*-all.jar' | head -n 1)
+          echo "📦 Located JAR: $JAR_FILE"
+
+          if [ -z "$JAR_FILE" ]; then
+            echo "❌ Could not find the fat JAR file!"
+            exit 1
+          fi
+
+          cp "$JAR_FILE" dist/cc-ballot-cli/cc-ballot-cli-all.jar
           cp cc-ballot-cli.sh cc-ballot-cli.bat install.sh README.md dist/cc-ballot-cli/
           chmod +x dist/cc-ballot-cli/*.sh
 
